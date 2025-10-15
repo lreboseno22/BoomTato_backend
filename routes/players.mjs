@@ -8,14 +8,14 @@ const router = express.Router();
 // CREATE / POST a player
 router.post("/", async (req, res) => {
     const { username, score } = req.body;
-    const player = new Player({ username, score })
+    const player = new Player({ username, score });
     try {
         const newPlayer = await player.save();
         res.status(201).json(newPlayer);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
-})
+});
 
 // READ / GET all players
 router.get("/", async (req, res) => {
@@ -25,7 +25,7 @@ router.get("/", async (req, res) => {
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
-})
+});
 
 // GET single player by ID
 router.get("/:id", async (req, res) => {
@@ -36,10 +36,28 @@ router.get("/:id", async (req, res) => {
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
-})
+});
 
 // UPDATE / PUT
+router.put("/:id", async (req, res) => {
+    try {
+        const updatedPlayer = await Player.findByIdAndUpdate(req.params.id,req.body, { new: true }); // will return the updated player body
+        if(!updatedPlayer) return res.status(404).json({ message: "Player not Found" });
+        res.json(updatedPlayer);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
 
 // DELETE
+router.delete("/:id", async (req, res) => {
+    try {
+        const deletedPlayer = await Player.findByIdAndDelete(req.params.id);
+        if(!deletedPlayer) return res.status(404).json({ message: "Player not Found" });
+        res.json({ message: "Player deleted" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
 
 export default router;
