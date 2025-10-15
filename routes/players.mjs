@@ -6,16 +6,41 @@ const router = express.Router();
 // Routes
 
 // CREATE / POST a player
-router.post("/", async (req, res) => {
-    const { username, score } = req.body;
-    const player = new Player({ username, score });
+
+// Register
+router.post("/register", async (req, res) => {
+    const { username, password } = req.body;
     try {
+        const existing = await Player.findOne({ username });
+        if(existing){
+            return res.status(400).json({ message: "Username already taken" });
+        }
+        const player = new Player({ username, password });
         const newPlayer = await player.save();
         res.status(201).json(newPlayer);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
 });
+
+// Login
+router.post("/login", async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        const player = await Player.findOne({ username });
+        if(!player){
+            return res.status(404).json({ message: "Player not Found" });
+        }
+
+        if(player.password !== password){
+            return res.status(401).json({ message: "Incorrect password" });
+        }
+        res.json(player);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+})
 
 // READ / GET all players
 router.get("/", async (req, res) => {
@@ -38,7 +63,7 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-// UPDATE / PUT
+// UPDATE / PUT a player by ID
 router.put("/:id", async (req, res) => {
     try {
         const updatedPlayer = await Player.findByIdAndUpdate(req.params.id,req.body, { new: true }); // will return the updated player body
@@ -49,7 +74,7 @@ router.put("/:id", async (req, res) => {
     }
 });
 
-// DELETE
+// DELETE a player by ID
 router.delete("/:id", async (req, res) => {
     try {
         const deletedPlayer = await Player.findByIdAndDelete(req.params.id);
