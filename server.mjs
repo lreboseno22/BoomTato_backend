@@ -2,7 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
-import playerRoutes from "./routes/players.mjs"
+import playerRoutes from "./routes/players.mjs";
+import gameRoutes from "./routes/games.mjs";
 import { logger } from "./middleware/logger.mjs";
 
 dotenv.config();
@@ -22,6 +23,7 @@ mongoose
   .catch((err) => console.error("Error connecting to MongoDB", err));
 
 app.use("/api/players", playerRoutes);
+app.use("/api/games", gameRoutes);
 
 // Route
 app.get("/", (req, res) => {
