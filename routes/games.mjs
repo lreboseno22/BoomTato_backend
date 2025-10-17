@@ -56,7 +56,7 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-// EDIT GAME 
+// EDIT GAME by id
 router.put("/:id", async (req, res) => {
     try {
         const updatedGame = await Game.findByIdAndUpdate(req.params.id, req.body, {
@@ -69,6 +69,23 @@ router.put("/:id", async (req, res) => {
     }
 });
 
+// END GAME 
+router.put("/:id/end", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const game = await Game.findById(id);
+        if(!game) return res.status(404).json({ message: "Game not Found" });
+
+        game.status = "finished";
+        await game.save();
+        res.json({ message: "Game ended", game });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+})
+
+
+// DELETE GAME by id
 router.delete("/:id", async (req, res) => {
     try {
         const deletedGame = await Game.findByIdAndDelete(req.params.id);
