@@ -45,6 +45,23 @@ router.get("/", async (req, res) => {
     }
 });
 
+// GET all games that are in "waiting" status so other players can join
+router.get("/waiting", async (req, res) => {
+    try {
+        const waitingGames = await Game.find({ status: "waiting" }).populate("host", "username").sort({ createdAt: -1 }); // new first
+
+        // if no waiting status games are found
+        if(waitingGames.length === 0){
+            return res.status(200).json({ message: "No open games avilable right now"});
+        }
+
+        res.json(waitingGames);
+    } catch (err) {
+        console.error("Error getting games", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 // Get/Read Game by id
 router.get("/:id", async (req, res) => {
     try {
@@ -55,22 +72,6 @@ router.get("/:id", async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
-
-// GET all games that are in "waiting" status so other players can join
-router.get("/waiting", async (req, res) => {
-    try {
-        const waitingGames = await Game.find({ status: "waiting" }).populate("players", "username").sort({ createAt: -1 }); // new first
-
-        // if no waiting status games are found
-        if(waitingGames.length === 0){
-            return res.status(200).json({ message: "No open games avilable right now"});
-        }
-
-        res.json(waitingGames);
-    } catch (err) {
-        
-    }
-})
 
 // EDIT GAME by id
 router.put("/:id", async (req, res) => {
