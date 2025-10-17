@@ -84,6 +84,35 @@ router.put("/:id/end", async (req, res) => {
     }
 })
 
+//JOIN GAME
+router.patch("/:id/join", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { playerId } = req.body;
+
+        const game = await Game.findById(id);
+        if(!game) return res.status(404).json({ message: "Game not Found" });
+
+        // only join if game's status is waiting for players
+        if(game.status !== "waiting"){
+            return res.status(400).json({ message: "Game is not joinable" });
+        }
+
+        // add player to players list
+        game.players.push(playerId);
+
+        // for now start game / change status to in progess when 2 or more players join
+        if(game.players.length >= 2){
+            game.status = "in-progress";
+        }
+
+        await game.save();
+        res.json(game);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+})
+
 
 // DELETE GAME by id
 router.delete("/:id", async (req, res) => {
