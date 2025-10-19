@@ -99,7 +99,7 @@ router.put("/:id/end", async (req, res) => {
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
-})
+});
 
 //JOIN GAME
 router.patch("/:id/join", async (req, res) => {
@@ -121,6 +121,29 @@ router.patch("/:id/join", async (req, res) => {
         // for now start game / change status to in progess when 2 or more players join
         if(game.players.length >= 2){
             game.status = "in-progress";
+        }
+
+        await game.save();
+        res.json(game);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.patch("/:id/leave", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { playerId } = req.body;
+        
+        const game = await Game.findById(id);
+        if(!game) return res.status(404).json({ message: "Game not Found" });
+        
+        game.players = game.players.filter(
+            (player) => player.toString() !== playerId
+        );
+
+        if(game.players.length  < 2 ){
+            game.status = "waiting";
         }
 
         await game.save();
