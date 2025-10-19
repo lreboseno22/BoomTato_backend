@@ -65,7 +65,7 @@ router.get("/waiting", async (req, res) => {
 // Get/Read Game by id
 router.get("/:id", async (req, res) => {
     try {
-        const game = await Game.findById(req.params.id).populate("players", "username");
+        const game = await Game.findById(req.params.id).populate("players", "username").populate("host", "username");
         if(!game) return res.status(404).json({ message: "Game not Found" });
         res.json(game);
     } catch (err) {
