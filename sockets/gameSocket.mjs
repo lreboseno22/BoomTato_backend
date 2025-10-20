@@ -70,11 +70,11 @@ export default function initGameSocket(io) {
     // Listen for player movement
     socket.on("playerMove", ({ gameId, playerId, direction }) => {
       const updatedState = movePlayer(gameId, playerId, direction);
-      console.log(
-        `[SERVER] Move received from ${playerId} (${socket.id}) in game ${gameId}: ${direction}`
-      );
+    //   console.log(
+    //     `[SERVER] Move received from ${playerId} (${socket.id}) in game ${gameId}: ${direction}`
+    //   );
 
-      console.log(`Movement from ${playerId}: ${direction}`);
+    //   console.log(`Movement from ${playerId}: ${direction}`);
 
       if (updatedState) {
         io.to(gameId).emit("stateUpdated", updatedState);

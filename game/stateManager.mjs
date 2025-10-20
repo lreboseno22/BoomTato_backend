@@ -28,21 +28,25 @@ export function movePlayer(gameId, playerId, direction){
     const state = gameStates.get(gameId);
     if(!state || !state.players[playerId]) return null;
 
-    const speed = 5;
+    const speed = 1;
     const player = state.players[playerId];
+
+    const MAP_WIDTH = 800;
+    const MAP_HEIGHT = 600;
+    const PLAYER_SIZE = 32;
 
     switch(direction){
         case "left":
-            player.x -= speed;
+            player.x = Math.max(0, player.x - speed);
             break;
         case "right":
-            player.x += speed;
+            player.x = Math.min(MAP_WIDTH - PLAYER_SIZE, player.x + speed);
             break;
         case "up":
-            player.y -= speed;
+            player.y = Math.max(0, player.y - speed);
             break;
         case "down":
-            player.y += speed;
+            player.y = Math.min(MAP_HEIGHT - PLAYER_SIZE, player.y + speed);
             break;
     }
 
