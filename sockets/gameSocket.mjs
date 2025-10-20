@@ -1,4 +1,4 @@
-import { initGameState } from "../game/stateManager.mjs";
+import { initGameState, movePlayer, getGameState } from "../game/stateManager.mjs";
 import Game from "../models/Game.js";
 
 export default function initGameSocket(io) {
@@ -54,6 +54,15 @@ export default function initGameSocket(io) {
                 console.error("Error initializing game state", err);
             }
         });
+
+        // Listen for player movement
+        socket.on("playerMove", ({ gameId, playerId, direction }) => {
+            const updatedState = movePlayer(gameId, playerId, direction);
+            
+            if(updatedState){
+                io.to(gameId).emit("stateUpdated", updatedState);
+            }
+        })
 
         // Handle Disconect
         socket.on("disconnect", () => {
