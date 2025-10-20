@@ -1,79 +1,104 @@
-import { initGameState, movePlayer, getGameState } from "../game/stateManager.mjs";
+import {
+  initGameState,
+  movePlayer,
+  getGameState,
+} from "../game/stateManager.mjs";
 import Game from "../models/Game.js";
 
 export default function initGameSocket(io) {
+  const connectedPlayers = new Map();
 
-    const connectedPlayers = new Map();
+  io.on("connection", (socket) => {
+    console.log(`[SERVER] Player connected: ${socket.id}`);
 
-    io.on("connection", (socket) => {
-        console.log(`Player connected: ${socket.id}`);
+    // Handle player identification
+    socket.on("registerPlayer", (playerId) => {
+      connectedPlayers.set(socket.id, { playerId });
+      console.log(
+        `[SERVER] Registerd player ${playerId} for socket ${socket.id}`
+      );
+    });
 
-        // Handle player identification
-        socket.on("registerPlayer", (playerId) => {
-            connectedPlayers.set(socket.id, { playerId });
-            console.log(`Player ${playerId} registered with socket ${socket.id}`);
-        });
+    // Player joins a game room
+    socket.on("joinGameRoom", async (gameId) => {
+      socket.join(gameId);
 
-        // Player joins a game room
-        socket.on("joinGameRoom", (gameId) => {
-            socket.join(gameId);
-            console.log(`Player ${socket.id} joined room ${gameId}`);
+      const info = connectedPlayers.get(socket.id);
+      console.log(
+        `[SERVER] Socket ${socket.id} (${info?.playerId}) joined room ${gameId}`
+      );
 
-            // Notify everyone in that room
-            io.to(gameId).emit("playerJoined", {
-                socketId: socket.id,
-                gameId,
-            });
-        });
+      // Ensure a game state exists
+      if (!getGameState(gameId)) {
+        const game = await Game.findById(gameId).populate("players", "_id");
+        const playerIds = game?.players?.map((p) => p._id.toString()) || [];
+        initGameState(gameId, playerIds);
+      }
 
-        // Player leaves a game room
-        socket.on("leaveGameRoom", (gameId) => {
-            socket.leave(gameId);
-            console.log(`Player ${socket.id} left room ${gameId}`);
+      io.to(gameId).emit("playerJoined", { socketId: socket.id, gameId });
+    });
 
-            io.to(gameId).emit("playerLeft", {
-                socketId: socket.id,
-                gameId,
-            });
-        });
+    // Player leaves a game room
+    socket.on("leaveGameRoom", (gameId) => {
+      socket.leave(gameId);
+      console.log(`Player ${socket.id} left room ${gameId}`);
 
-        // Host starts game
-        socket.on("startGame", async (gameId) => {
-            try {
-                const game = await Game.findById(gameId).populate("players", "_id");
-                if(!game){
-                    console.error("Game not Found")
-                    return;
-                }
+      io.to(gameId).emit("playerLeft", {
+        socketId: socket.id,
+        gameId,
+      });
+    });
 
-                const playerIds = game.players.map(p => p._id.toString());
-                const initialState = initGameState(gameId, playerIds);
+    // Host starts game
+    socket.on("startGame", async (gameId) => {
+      try {
+        const game = await Game.findById(gameId).populate("players", "_id");
+        if (!game) {
+          console.error("Game not Found");
+          return;
+        }
 
-                io.to(gameId).emit("gameStarted", { gameId, initialState });
-            } catch (err) {
-                console.error("Error initializing game state", err);
-            }
-        });
+        const playerIds = game.players.map((p) => p._id.toString());
+        const initialState = initGameState(gameId, playerIds);
 
-        // Listen for player movement
-        socket.on("playerMove", ({ gameId, playerId, direction }) => {
-            const updatedState = movePlayer(gameId, playerId, direction);
-            
-            if(updatedState){
-                io.to(gameId).emit("stateUpdated", updatedState);
-            }
-        })
+        io.to(gameId).emit("gameStarted", { gameId, initialState });
+      } catch (err) {
+        console.error("Error initializing game state", err);
+      }
+    });
 
-        // Handle Disconect
-        socket.on("disconnect", () => {
-            const playerInfo = connectedPlayers.get(socket.id);
-            if(playerInfo){
-                io.to(playerInfo.gameId).emit("playerDisconnected", playerInfo.playerId);
-                console.log(`Player ${playerInfo.playerId} disconnected (${socket.id})`);
-                connectedPlayers.delete(socket.id);
-            } else {
-                console.log(`Socket ${socket.id} disconnected`);
-            }
-        });
-    })
+    // Listen for player movement
+    socket.on("playerMove", ({ gameId, playerId, direction }) => {
+      const updatedState = movePlayer(gameId, playerId, direction);
+      console.log(
+        `[SERVER] Move received from ${playerId} (${socket.id}) in game ${gameId}: ${direction}`
+      );
+
+      console.log(`Movement from ${playerId}: ${direction}`);
+
+      if (updatedState) {
+        io.to(gameId).emit("stateUpdated", updatedState);
+      }
+    });
+
+    // Provide the current game state to a client on request
+    socket.on("requestCurrentState", (gameId, callback) => {
+      const state = getGameState(gameId);
+      console.log(
+        `[SERVER] Sending current state to socket ${socket.id} for game ${gameId}`
+      );
+      if (callback) callback(state);
+    });
+
+    // Handle Disconect
+    socket.on("disconnect", () => {
+      const playerInfo = connectedPlayers.get(socket.id);
+
+      console.log(
+        `[SERVER] Disconnected socket ${socket.id}, playerInfo:`,
+        playerInfo
+      );
+      connectedPlayers.delete(socket.id);
+    });
+  });
 }
