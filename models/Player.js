@@ -5,7 +5,7 @@ const playerSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true},
     password: { type: String, required: true },
     score: { type: Number, default: 0 },
-    // socketId would go here as well 
+    socketId: { type: String, default: null },
 }, { timestamps: true });
 
 const Player = mongoose.model("Player", playerSchema);
