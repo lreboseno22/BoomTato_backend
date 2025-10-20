@@ -86,6 +86,24 @@ router.put("/:id", async (req, res) => {
     }
 });
 
+router.put("/:id/start", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const game = await Game.findById(id);
+
+        if(!game) return res.status(404).json({ message: "Game not Found" });
+        if(game.status !== "waiting") return res.status(400).json({ message: "Game already started or finished" });
+
+        // require at least 2 players
+        if(game.players.length < 2) return res.status(400).json({ message: "Need at least 2 players to start" });
+        game.status = "in-progress";
+        await game.save();
+        res.json({ message: "Game started", game });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // END GAME 
 router.put("/:id/end", async (req, res) => {
     try {
@@ -117,11 +135,6 @@ router.patch("/:id/join", async (req, res) => {
 
         // add player to players list
         game.players.push(playerId);
-
-        // for now start game / change status to in progess when 2 or more players join
-        if(game.players.length >= 2){
-            game.status = "in-progress";
-        }
 
         await game.save();
         res.json(game);
