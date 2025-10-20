@@ -1,3 +1,6 @@
+import { initGameState } from "../game/stateManager.mjs";
+import Game from "../models/Game.js";
+
 export default function initGameSocket(io) {
 
     const connectedPlayers = new Map();
@@ -35,20 +38,33 @@ export default function initGameSocket(io) {
         });
 
         // Host starts game
-        socket.on("startGame", (gameId) => {
-            console.log(`Game ${gameId} started`);
-            io.to(gameId).emit("gameStarted", { gameId });
+        socket.on("startGame", async (gameId) => {
+            try {
+                const game = await Game.findById(gameId).populate("players", "_id");
+                if(!game){
+                    console.error("Game not Found")
+                    return;
+                }
+
+                const playerIds = game.players.map(p => p._id.toString());
+                const initialState = initGameState(gameId, playerIds);
+
+                io.to(gameId).emit("gameStarted", { gameId, initialState });
+            } catch (err) {
+                console.error("Error initializing game state", err);
+            }
         });
 
         // Handle Disconect
         socket.on("disconnect", () => {
             const playerInfo = connectedPlayers.get(socket.id);
             if(playerInfo){
+                io.to(playerInfo.gameId).emit("playerDisconnected", playerInfo.playerId);
                 console.log(`Player ${playerInfo.playerId} disconnected (${socket.id})`);
                 connectedPlayers.delete(socket.id);
             } else {
                 console.log(`Socket ${socket.id} disconnected`);
             }
-        })
+        });
     })
 }
