@@ -1,181 +1,47 @@
 import express from "express";
-import Game from "../models/Game.js";
+import {
+  createGame,
+  deleteGame,
+  endGame,
+  getGameById,
+  getGames,
+  getWaitingGames,
+  joinGame,
+  leaveGame,
+  startGame,
+  updatedGame,
+} from "../controllers/gameController.mjs";
 
 const router = express.Router();
 
-// Create Game
-router.post("/", async (req, res) => {
-    try {
-        const { name, host } = req.body;
+// Create a game
+router.post("/", createGame);
 
-        // Check if player/host already has a game open
-        const existingGame = await Game.findOne({
-            host,
-            status: { $in: ["waiting", "in progress"] } // only if the game's status is in progress or waiting
-        });
+// Get all games
+router.get("/", getGames);
 
-        // If the player does have a game that isn't finihsed then throw error
-        if(existingGame){
-            return res.status(400).json({
-                message: "You already have an active game. Finish it or cancle it first!"
-            })
-        }
+// Get all games that are in "waiting" status
+router.get("/waiting", getWaitingGames);
 
-        const newGame = new Game({ 
-            name, 
-            host, 
-            players: [host],
-            status: "waiting"
-        });
+// Get game by id
+router.get("/:id", getGameById);
 
-        const savedGame = await newGame.save();
-        res.status(201).json(savedGame);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
+// Update game by id
+router.put("/:id", updatedGame);
 
-// Get/Read Game
-router.get("/", async (req, res) => {
-    try {
-        const games = await Game.find();
-        res.json(games);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
+// Start game
+router.put("/:id/start", startGame);
 
-// GET all games that are in "waiting" status so other players can join
-router.get("/waiting", async (req, res) => {
-    try {
-        const waitingGames = await Game.find({ status: "waiting" }).populate("host", "username").sort({ createdAt: -1 }); // new first
+// End game
+router.put("/:id/end", endGame);
 
-        // if no waiting status games are found
-        if(waitingGames.length === 0){
-            return res.status(200).json({ message: "No open games avilable right now"});
-        }
+// Join game
+router.patch("/:id/join", joinGame);
 
-        res.json(waitingGames);
-    } catch (err) {
-        console.error("Error getting games", err);
-        res.status(500).json({ message: "Server error" });
-    }
-});
+// Leave game
+router.patch("/:id/leave", leaveGame);
 
-// Get/Read Game by id
-router.get("/:id", async (req, res) => {
-    try {
-        const game = await Game.findById(req.params.id).populate("players", "username").populate("host", "username");
-        if(!game) return res.status(404).json({ message: "Game not Found" });
-        res.json(game);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// EDIT GAME by id
-router.put("/:id", async (req, res) => {
-    try {
-        const updatedGame = await Game.findByIdAndUpdate(req.params.id, req.body, {
-            new: true
-        })
-        if(!updatedGame) return res.status(404).json({ message: "Game not Found" });
-        res.json(updatedGame);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
-});
-
-router.put("/:id/start", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const game = await Game.findById(id);
-
-        if(!game) return res.status(404).json({ message: "Game not Found" });
-        if(game.status !== "waiting") return res.status(400).json({ message: "Game already started or finished" });
-
-        // require at least 2 players
-        if(game.players.length < 2) return res.status(400).json({ message: "Need at least 2 players to start" });
-        game.status = "in-progress";
-        await game.save();
-        res.json({ message: "Game started", game });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// END GAME 
-router.put("/:id/end", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const game = await Game.findById(id);
-        if(!game) return res.status(404).json({ message: "Game not Found" });
-
-        game.status = "finished";
-        await game.save();
-        res.json({ message: "Game ended", game });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-//JOIN GAME
-router.patch("/:id/join", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { playerId } = req.body;
-
-        const game = await Game.findById(id);
-        if(!game) return res.status(404).json({ message: "Game not Found" });
-
-        // only join if game's status is waiting for players
-        if(game.status !== "waiting"){
-            return res.status(400).json({ message: "Game is not joinable" });
-        }
-
-        // add player to players list
-        game.players.push(playerId);
-
-        await game.save();
-        res.json(game);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.patch("/:id/leave", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { playerId } = req.body;
-        
-        const game = await Game.findById(id);
-        if(!game) return res.status(404).json({ message: "Game not Found" });
-        
-        game.players = game.players.filter(
-            (player) => player.toString() !== playerId
-        );
-
-        if(game.players.length  < 2 ){
-            game.status = "waiting";
-        }
-
-        await game.save();
-        res.json(game);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-})
-
-
-// DELETE GAME by id
-router.delete("/:id", async (req, res) => {
-    try {
-        const deletedGame = await Game.findByIdAndDelete(req.params.id);
-        if(!deletedGame) return res.status(404).json({ message: "Game not Found" });
-        res.json({ message: "Game deleted" });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-})
+// Delete game
+router.delete("/:id", deleteGame);
 
 export default router;
