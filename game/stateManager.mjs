@@ -26,6 +26,8 @@ export function initGameState(gameId, players) {
             return acc;
         }, {}),
         potatoHolder, // track who currently has the potato
+        potatoTimer: 0,
+        lastUpdateTime: Date.now(),
     };
 
     gameStates.set(gameId, initialState);
@@ -108,3 +110,36 @@ export function movePlayer(gameId, playerId, direction){
 export function getGameState(gameId){
     return gameStates.get(gameId);
 }
+
+const POTATO_LIMIT = 10000;
+const TICK_RATE = 1000;
+
+setInterval(() => {
+    for(const [gameId, state] of gameStates.entries()) {
+        if(!state.potatoHolder) continue; // no potato holder = skip
+
+        // update timer if someone has the potato
+        if(state.potatoTimer === undefined) state.potatoTimer = 0;
+        if(!state.lastUpdateTime) state.lastUpdateTime = Date.now();
+        
+        state.potatoTimer += TICK_RATE;
+
+        const remaining = Math.max(0, POTATO_LIMIT - state.potatoTimer);
+        const secondsLeft = Math.ceil(remaining / 1000);
+
+        console.log(`[TIMER] Player: ${state.potatoHolder} has ${secondsLeft}s left`);
+
+        // handle explosion
+        if(state.potatoTimer >= POTATO_LIMIT) {
+            console.log(`[BOOM] Player ${state.potatoHolder} exploded`);
+            state.potatoHolder = null; // after potato explodes there is no more potato 
+            state.potatoTimer = 0; //reset
+            state.lastUpdateTime = Date.now();
+
+            gameStates.set(gameId, state);
+            continue;
+        }
+
+        gameStates.set(gameId, state);
+    }
+}, TICK_RATE);
