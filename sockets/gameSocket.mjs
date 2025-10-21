@@ -20,6 +20,17 @@ export default function initGameSocket(io) {
       );
     });
 
+    socket.on("createGame", async (gameData) => {
+      try {
+        const newGame = await Game.create(gameData);
+
+        io.emit("lobbyUpdate", newGame);
+        socket.emit("gameCreated", newGame);
+      } catch (err){
+        console.error("Error creating game:", err);
+      }
+    })
+
     // Player joins a game room
     socket.on("joinGameRoom", async (gameId) => {
       socket.join(gameId);
