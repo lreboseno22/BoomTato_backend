@@ -18,15 +18,18 @@ export function initGameState(gameId, players) {
         { x: MAP_WIDTH -82, y: 50 },
     ];
 
+    const potatoHolder = players.length > 0 ? players[Math.floor(Math.random() * players.length)] : null;
+
     const initialState = {
         players: players.reduce((acc, id, index) => {
-            acc[id] = { ...positions[index] }; // players will spawn at different positions
+            acc[id] = { ...positions[index], hasPotato: id === potatoHolder }; // players will spawn at different positions
             return acc;
         }, {}),
+        potatoHolder, // track who currently has the potato
     };
 
     gameStates.set(gameId, initialState);
-    console.log(`State Initialized new game: ${gameId}`);
+    console.log(`State Initialized new game: ${gameId}, Potato holder: ${potatoHolder}`);
     return initialState;
 }
 
@@ -34,23 +37,20 @@ const MAP_WIDTH = 800;
 const MAP_HEIGHT = 600;
 const PLAYER_SIZE = 32;
 
-function checkCollision(x, y, state, playerId){
+// check collisions with the map boundary and other players
+function checkCollision(x, y){
     // Boundary
     if(x < 0 || y < 0 || x + PLAYER_SIZE > MAP_WIDTH || y + PLAYER_SIZE > MAP_HEIGHT)
         return true;
-
-    for(const [id, pos] of Object.entries(state.players)){
-        if(id === playerId) continue;
-        if(
-            x < pos.x + PLAYER_SIZE &&
-            x + PLAYER_SIZE > pos.x &&
-            y < pos.y + PLAYER_SIZE &&
-            y + PLAYER_SIZE > pos.y
-        ){
-            return true;
-        }
-    }
     return false;
+}
+
+// allow for player overlapping/touch to pass the potato (so its more like tag)
+function checkPlayerCollision(p1, p2){
+    const dx = p1.x - p2.x;
+    const dy = p1.y - p2.y;
+    const distance = Math.sqrt(dx * dx + dy * dy); //within 1 player width 
+    return distance < PLAYER_SIZE;
 }
 
 // Move Player and broadcast the movement update
@@ -83,9 +83,24 @@ export function movePlayer(gameId, playerId, direction){
     if(!checkCollision(newX, newY, state, playerId)){
         player.x = newX;
         player.y = newY;
-        gameStates.set(gameId, state);
     }
 
+    // check is there is a potato holder and if the player has a 'hasPotato' property
+    if(state.potatoHolder === playerId && state.players[playerId].hasPotato){
+        for(const [otherId, other] of Object.entries(state.players)) {
+            if(otherId === playerId) continue;
+            if(checkPlayerCollision(player, other)){
+                // pass potato
+                state.players[playerId].hasPotato = false;
+                state.players[otherId].hasPotato = true;
+                state.potatoHolder = otherId;
+                console.log(`[SERVER] Potato passed from ${playerId} to ${otherId}`);
+                break;
+            }
+        }
+    }
+
+    gameStates.set(gameId, state);
     return state;
 }
 
