@@ -22,7 +22,10 @@ export default function initGameSocket(io) {
 
     socket.on("createGame", async (gameData) => {
       try {
-        const newGame = await Game.create(gameData);
+        const newGame = await Game.create({
+          ...gameData,
+          players: [gameData.host],
+        });
 
         io.emit("lobbyUpdate", newGame);
         socket.emit("gameCreated", newGame);
@@ -42,12 +45,17 @@ export default function initGameSocket(io) {
 
       // Ensure a game state exists
       if (!getGameState(gameId)) {
-        const game = await Game.findById(gameId).populate("players", "_id");
+        const game = await Game.findById(gameId).populate("players", "_id username");
         const playerIds = game?.players?.map((p) => p._id.toString()) || [];
         initGameState(gameId, playerIds);
       }
 
-      io.to(gameId).emit("playerJoined", { socketId: socket.id, gameId });
+      const state = getGameState(gameId);
+      io.to(gameId).emit("playerJoined", {
+        socketId: socket.id,
+        gameId,
+        gameState: state,
+      })
     });
 
     // Player leaves a game room
