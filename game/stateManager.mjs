@@ -11,9 +11,16 @@ export function initGameState(gameId, players) {
         players = [];
     }
 
+    const MAP_WIDTH = 800;
+
+    const positions = [
+        { x: 50, y: 50 },
+        { x: MAP_WIDTH -82, y: 50 },
+    ];
+
     const initialState = {
-        players: players.reduce((acc, id) => {
-            acc[id] = { x: 0, y: 0 }; // starting position
+        players: players.reduce((acc, id, index) => {
+            acc[id] = { ...positions[index] }; // players will spawn at different positions
             return acc;
         }, {}),
     };
