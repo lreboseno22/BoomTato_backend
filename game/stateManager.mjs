@@ -179,9 +179,7 @@ export function setGamePhase(gameId, phase) {
     state.phase = phase;
 
     if(phase === "playing"){
-        // ensure there is a potato holder
-        if(state.potatoHolder){
-            const playerIds = Object.keys(state.players);
+        const playerIds = Object.keys(state.players);
             if(playerIds.length > 0) {
                 const randomPlayer = playerIds[Math.floor(Math.random() * playerIds.length)];
                 state.potatoHolder = randomPlayer;
@@ -189,7 +187,6 @@ export function setGamePhase(gameId, phase) {
                 state.potatoTimer = 0;
                 state.lastUpdateTime = Date.now();
                 console.log(`[STATE]: Game ${gameId} started, potato assigned to ${randomPlayer}`);
-            }
         }
     }
 
