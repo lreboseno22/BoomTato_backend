@@ -30,34 +30,62 @@ export function initGameState(gameId, players) {
     return initialState;
 }
 
+const MAP_WIDTH = 800;
+const MAP_HEIGHT = 600;
+const PLAYER_SIZE = 32;
+
+function checkCollision(x, y, state, playerId){
+    // Boundary
+    if(x < 0 || y < 0 || x + PLAYER_SIZE > MAP_WIDTH || y + PLAYER_SIZE > MAP_HEIGHT)
+        return true;
+
+    for(const [id, pos] of Object.entries(state.players)){
+        if(id === playerId) continue;
+        if(
+            x < pos.x + PLAYER_SIZE &&
+            x + PLAYER_SIZE > pos.x &&
+            y < pos.y + PLAYER_SIZE &&
+            y + PLAYER_SIZE > pos.y
+        ){
+            return true;
+        }
+    }
+    return false;
+}
+
 // Move Player and broadcast the movement update
 export function movePlayer(gameId, playerId, direction){
     const state = gameStates.get(gameId);
     if(!state || !state.players[playerId]) return null;
 
-    const speed = 1;
+    const speed = 2;
     const player = state.players[playerId];
 
-    const MAP_WIDTH = 800;
-    const MAP_HEIGHT = 600;
-    const PLAYER_SIZE = 32;
+    let newX = player.x;
+    let newY = player.y;
 
     switch(direction){
         case "left":
-            player.x = Math.max(0, player.x - speed);
+            newX -= speed;
             break;
         case "right":
-            player.x = Math.min(MAP_WIDTH - PLAYER_SIZE, player.x + speed);
+            newX += speed;
             break;
         case "up":
-            player.y = Math.max(0, player.y - speed);
+            newY -= speed;
             break;
         case "down":
-            player.y = Math.min(MAP_HEIGHT - PLAYER_SIZE, player.y + speed);
+            newY += speed;
             break;
     }
 
-    gameStates.set(gameId, state);
+    // only update state is no collision
+    if(!checkCollision(newX, newY, state, playerId)){
+        player.x = newX;
+        player.y = newY;
+        gameStates.set(gameId, state);
+    }
+
     return state;
 }
 
