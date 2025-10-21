@@ -28,6 +28,7 @@ export function initGameState(gameId, players) {
         potatoHolder, // track who currently has the potato
         potatoTimer: 0,
         lastUpdateTime: Date.now(),
+        phase: "waiting",
     };
 
     gameStates.set(gameId, initialState);
@@ -122,7 +123,7 @@ const TICK_RATE = 1000;
 
 setInterval(() => {
     for(const [gameId, state] of gameStates.entries()) {
-        if(!state.potatoHolder) continue; // no potato holder = skip
+        if(state.phase !== "playing" || !state.potatoHolder) continue; // no potato holder = skip
 
         // update timer if someone has the potato
         if(state.potatoTimer === undefined) state.potatoTimer = 0;
@@ -142,6 +143,8 @@ setInterval(() => {
             state.potatoTimer = 0; //reset
             state.lastUpdateTime = Date.now();
 
+            state.phase = "ended";
+
             gameStates.set(gameId, state);
             continue;
         }
@@ -149,3 +152,37 @@ setInterval(() => {
         gameStates.set(gameId, state);
     }
 }, TICK_RATE);
+
+export function setGamePhase(gameId, phase) {
+    const state = gameStates.get(gameId);
+    if(!state) return null;
+
+    state.phase = phase;
+
+    if(phase === "playing"){
+        // ensure there is a potato holder
+        if(state.potatoHolder){
+            const playerIds = Object.keys(state.players);
+            if(playerIds.length > 0) {
+                const randomPlayer = playerIds[Math.floor(Math.random() * playerIds.length)];
+                state.potatoHolder = randomPlayer;
+                state.players[randomPlayer].hasPotato = true;
+                state.potatoTimer = 0;
+                state.lastUpdateTime = Date.now();
+                console.log(`[STATE]: Game ${gameId} started, potato assigned to ${randomPlayer}`);
+            }
+        }
+    }
+
+    if(phase === "ended"){
+        state.potatoHolder = null;
+        console.log(`[STATE] Game ${gameId} ended`);
+    }
+
+    if(phase === "results"){
+        console.log(`[STATE] Game ${gameId} showing results`);
+    }
+
+    gameStates.set(gameId, state);
+    return state;
+}

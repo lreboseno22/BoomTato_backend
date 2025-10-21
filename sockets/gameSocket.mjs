@@ -2,6 +2,7 @@ import {
   initGameState,
   movePlayer,
   getGameState,
+  setGamePhase
 } from "../game/stateManager.mjs";
 import Game from "../models/Game.js";
 
@@ -59,9 +60,11 @@ export default function initGameSocket(io) {
         }
 
         const playerIds = game.players.map((p) => p._id.toString());
-        const initialState = initGameState(gameId, playerIds);
+        let gameState = initGameState(gameId, playerIds);
 
-        io.to(gameId).emit("gameStarted", { gameId, initialState });
+        gameState = setGamePhase(gameId, "playing");
+
+        io.to(gameId).emit("gameStarted", { gameId, gameState });
       } catch (err) {
         console.error("Error initializing game state", err);
       }
