@@ -97,6 +97,12 @@ export function movePlayer(gameId, playerId, direction){
                 state.players[otherId].hasPotato = true;
                 state.potatoHolder = otherId;
                 console.log(`[SERVER] Potato passed from ${playerId} to ${otherId}`);
+
+                // Reset timer after pass
+                state.potatoTimer = 0;
+                state.lastUpdateTime = Date.now();
+                console.log(`[TIMER RESET] Potato timer restarted after pass to ${otherId}`);
+
                 break;
             }
         }
