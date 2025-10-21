@@ -3,6 +3,12 @@
 // Initialize a global Map object to store all currently active game states
 const gameStates = new Map();
 
+let ioRef = null;
+ export function setIO(ioInstance){
+    ioRef = ioInstance
+ }
+
+
 // Initialize a new game state when a match starts
 // Each player starts with a default starting position for now its x=0 & y=0
 export function initGameState(gameId, players) {
@@ -139,11 +145,24 @@ setInterval(() => {
         // handle explosion
         if(state.potatoTimer >= POTATO_LIMIT) {
             console.log(`[BOOM] Player ${state.potatoHolder} exploded`);
+
+            const loser = state.potatoHolder;
+            const winner = Object.keys(state.players).find(id => id !== loser);
+
             state.potatoHolder = null; // after potato explodes there is no more potato 
             state.potatoTimer = 0; //reset
             state.lastUpdateTime = Date.now();
 
             state.phase = "ended";
+
+            if(ioRef){
+                ioRef.to(gameId).emit("gameEnded", {
+                    gameId,
+                    winner,
+                    loser,
+                    state,
+                });
+            }
 
             gameStates.set(gameId, state);
             continue;

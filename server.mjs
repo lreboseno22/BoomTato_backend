@@ -9,6 +9,7 @@ import { Server } from "socket.io";
 import connectDB from "./config/db.mjs";
 import initGameSocket from "./sockets/gameSocket.mjs";
 import errorHandler from "./middleware/errorHandler.mjs";
+import { setIO } from "./game/stateManager.mjs";
 
 // Load enviornment variables
 dotenv.config();
@@ -48,6 +49,9 @@ const io = new Server(server, {
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     }
 });
+
+// pass to stateManager
+setIO(io);
 
 // Initialize game sockets
 initGameSocket(io);
