@@ -168,6 +168,13 @@ setInterval(() => {
             continue;
         }
 
+        if(ioRef){
+            ioRef.to(gameId).emit("timerUpdate", {
+                potatoTimer: state.potatoTimer,
+                potatoHolder: state.potatoHolder,
+            });
+        }
+
         gameStates.set(gameId, state);
     }
 }, TICK_RATE);
