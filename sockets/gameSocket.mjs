@@ -58,6 +58,21 @@ export default function initGameSocket(io) {
       })
     });
 
+  socket.on("playerHasJoined", async (gameId) => {
+    try {
+      const updatedGame = await Game.findById(gameId).populate("players", "_id username");
+      if (!updatedGame) return;
+
+      console.log(`[SOCKET] Broadcasting playerJoined for game ${gameId}`);
+      io.to(gameId).emit("playerJoined", {
+        gameId,
+        gameState: updatedGame,
+      });
+    } catch (err) {
+      console.error("Error emitting playerJoined:", err);
+    }
+  });
+
     // Player leaves a game room
     socket.on("leaveGameRoom", (gameId) => {
       socket.leave(gameId);

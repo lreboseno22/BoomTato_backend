@@ -43,13 +43,7 @@ export const getWaitingGames = async (req, res) => {
       .populate("host", "username")
       .sort({ createdAt: -1 }); // new first
 
-    if (waitingGames.length === 0) {
-      return res
-        .status(200)
-        .json({ message: "No open games avilable right now" });
-    }
-
-    res.json(waitingGames);
+    res.status(200).json(waitingGames);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
