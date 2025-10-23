@@ -149,6 +149,10 @@ setInterval(() => {
             const loser = state.potatoHolder;
             const winner = Object.keys(state.players).find(id => id !== loser);
 
+            if(ioRef){
+                ioRef.to(gameId).emit("playerExploded", { loserId: loser });
+            }
+    
             state.potatoHolder = null; // after potato explodes there is no more potato 
             state.potatoTimer = 0; //reset
             state.lastUpdateTime = Date.now();
