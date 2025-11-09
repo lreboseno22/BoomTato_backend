@@ -11,50 +11,60 @@ import initGameSocket from "./sockets/gameSocket.mjs";
 import errorHandler from "./middleware/errorHandler.mjs";
 import { setIO } from "./game/stateManager.mjs";
 
-// Load enviornment variables
+// Load enviornment variables from .env
 dotenv.config();
 
+// Initialize Express
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(logger);
+// Middleware Setup
+app.use(cors()); // Enable CORS to allow requests from frontend
+app.use(express.json()); // Parse incoming JSON payloads
+app.use(logger); // Custom request logger middleware for debugging
 
-// Connection to MongoDB
+// Connection to Database
 connectDB();
 
-// Routes
+// REST API Routes
+
+// Player-related routes
 app.use("/api/players", playerRoutes);
+
+// Game-related routes
 app.use("/api/games", gameRoutes);
 
-// Root Route
+// Root route for quick health check
 app.get("/", (req, res) => {
     res.send("BoomTato backend running...");
 });
+
+// Error Handling
 
 // 404 Handler
 app.use((req, res) => {
     res.status(404).send("Route not Found");
 });
 
+// Centralized error handler middleware
 app.use(errorHandler);
 
-// Socket.IO
-const server = http.createServer(app);
+// Socket.IO Setup
+const server = http.createServer(app); // creates an HTTP server to integrate Socket.IO
+
+// Initialize Socket.IO instance
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173",
+        origin: "http://localhost:5173", // Frontend origin
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     }
 });
 
-// pass to stateManager
+// Make the Socket.IO instance globally accessible via the state manager
 setIO(io);
 
-// Initialize game sockets
+// Initialize all game-related socket event handlers
 initGameSocket(io);
 
-// Start server
+// Server Startup
 server.listen(PORT, () => console.log(`Server running on port: ${PORT}`));
