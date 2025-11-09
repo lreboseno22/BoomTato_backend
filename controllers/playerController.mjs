@@ -1,5 +1,9 @@
 import Player from "../models/Player.js";
 
+/**
+ * @desc Register/Create a new player
+ * @route POST /api/players/register
+ */
 export const registerPlayer = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -15,6 +19,10 @@ export const registerPlayer = async (req, res) => {
   }
 };
 
+/**
+ * @desc Log in a player
+ * @route POST /api/players/login
+ */
 export const loginPlayer = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -23,6 +31,7 @@ export const loginPlayer = async (req, res) => {
       return res.status(404).json({ message: "Player not Found" });
     }
 
+    // Validate password (Note: not hashed — for demo purposes)
     if (player.password !== password) {
       return res.status(401).json({ message: "Incorrect password" });
     }
@@ -32,6 +41,10 @@ export const loginPlayer = async (req, res) => {
   }
 };
 
+/**
+ * @desc Retrieve all players
+ * @route GET /api/players
+ */
 export const getPlayers = async (req, res) => {
   try {
     const players = await Player.find();
@@ -41,6 +54,10 @@ export const getPlayers = async (req, res) => {
   }
 };
 
+/**
+ * @desc Retrieve a single player by ID
+ * @route GET /api/players/:id
+ */
 export const getPlayerById = async (req, res) => {
   try {
     const player = await Player.findById(req.params.id);
@@ -51,13 +68,17 @@ export const getPlayerById = async (req, res) => {
   }
 };
 
+/**
+ * @desc Update player details
+ * @route PUT /api/players/:id
+ */
 export const updatePlayer = async (req, res) => {
   try {
     const updatedPlayer = await Player.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true }
-    ); // will return the updated player body
+      { new: true } // Return the updated document (player body)
+    );
     if (!updatedPlayer)
       return res.status(404).json({ message: "Player not Found" });
     res.json(updatedPlayer);
@@ -66,6 +87,10 @@ export const updatePlayer = async (req, res) => {
   }
 };
 
+/**
+ * @desc Delete a player by ID
+ * @route DELETE /api/players/:id
+ */
 export const deletePlayer = async (req, res) => {
   try {
     const deletedPlayer = await Player.findByIdAndDelete(req.params.id);

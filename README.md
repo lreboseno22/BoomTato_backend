@@ -78,3 +78,8 @@ npm install
 ## BOOMTato Frontend
 
 Here: https://github.com/lreboseno22/BoomTato_frontend 
+
+## FUTURE FEATURES
+Implement password hashing (bcrypt) for secure authentication
+Add JWT token generation for session-based login
+Validate incoming request bodies with a schema validator (e.g., Joi or Zod)

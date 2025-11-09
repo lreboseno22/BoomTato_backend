@@ -10,19 +10,24 @@ import {
 
 const router = express.Router();
 
-// Create player
+/**
+ * Player Routes
+ * Base URL: /api/players
+ */
+
+// Register/Create player
 router.post("/register", registerPlayer);
 
-// Login player
+// Log in existing player
 router.post("/login", loginPlayer);
 
 // Get all players
 router.get("/", getPlayers);
 
-// Get player by id
+// Get a specific player by ID
 router.get("/:id", getPlayerById);
 
-// Update player by id
+// Update player by ID
 router.put("/:id", updatePlayer);
 
 // DELETE a player by ID
