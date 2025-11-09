@@ -1,5 +1,10 @@
 import Game from "../models/Game.js";
 
+/**
+ * 
+ * @desc Create a new game
+ * @route POST /api/games
+ */
 export const createGame = async (req, res) => {
   try {
     const { name, host } = req.body;
@@ -28,6 +33,11 @@ export const createGame = async (req, res) => {
   }
 };
 
+/**
+ * 
+ * @desc Get all games
+ * @route GET /api/games
+ */
 export const getGames = async (req, res) => {
   try {
     const games = await Game.find();
@@ -37,11 +47,16 @@ export const getGames = async (req, res) => {
   }
 };
 
+/**
+ * 
+ * @desc Get all waiting games
+ * @route GET /api/games/waiting
+ */
 export const getWaitingGames = async (req, res) => {
   try {
     const waitingGames = await Game.find({ status: "waiting" })
       .populate("host", "username")
-      .sort({ createdAt: -1 }); // new first
+      .sort({ createdAt: -1 }); // Show newest first
 
     res.status(200).json(waitingGames);
   } catch (err) {
@@ -49,6 +64,11 @@ export const getWaitingGames = async (req, res) => {
   }
 };
 
+/**
+ * 
+ * @desc Get single game by ID 
+ * @route GET /api/games/:id
+ */
 export const getGameById = async (req, res) => {
   try {
     const game = await Game.findById(req.params.id)
@@ -63,6 +83,11 @@ export const getGameById = async (req, res) => {
   }
 };
 
+/**
+ * 
+ * @desc Update a game by ID
+ * @route PUT /api/games/:id
+ */
 export const updatedGame = async (req, res) => {
   try {
     const updatedGame = await Game.findByIdAndUpdate(req.params.id, req.body, {
@@ -78,6 +103,11 @@ export const updatedGame = async (req, res) => {
   }
 };
 
+/**
+ * 
+ * @desc Start a game (must have >= 2 players)
+ * @route PUT /api/games/:id/start
+ */
 export const startGame = async (req, res) => {
   try {
     const { id } = req.params;
@@ -89,7 +119,7 @@ export const startGame = async (req, res) => {
         .status(400)
         .json({ message: "Game already started or finished" });
 
-    // require at least 2 players
+    // Require at least 2 players to start
     if (game.players.length < 2)
       return res
         .status(400)
@@ -102,6 +132,10 @@ export const startGame = async (req, res) => {
   }
 };
 
+/**
+ * @desc End a game and mark as finished
+ * @route PUT /api/games/:id/end
+ */
 export const endGame = async (req, res) => {
   try {
     const { id } = req.params;
@@ -116,6 +150,10 @@ export const endGame = async (req, res) => {
   }
 };
 
+/**
+ * @desc Join an existing waiting game
+ * @route PATCH /api/games/:id/join
+ */
 export const joinGame = async (req, res) => {
   try {
     const { id } = req.params;
@@ -124,21 +162,28 @@ export const joinGame = async (req, res) => {
     const game = await Game.findById(id);
     if (!game) return res.status(404).json({ message: "Game not Found" });
 
-    // only join if game's status is waiting for players
+    // Allow joining only if game is in "waiting" state
     if (game.status !== "waiting") {
       return res.status(400).json({ message: "Game is not joinable" });
     }
 
-    // add player to players list
-    game.players.push(playerId);
+    // Prevent duplicate players
+    if (game.players.includes(playerId))
+      return res.status(400).json({ message: "Player already joined" });
 
+    game.players.push(playerId);
     await game.save();
+
     res.json(game);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
+/**
+ * @desc Leave a game (reverts to waiting if <2 players remain)
+ * @route PATCH /api/games/:id/leave
+ */
 export const leaveGame = async (req, res) => {
   try {
     const { id } = req.params;
@@ -147,10 +192,12 @@ export const leaveGame = async (req, res) => {
     const game = await Game.findById(id);
     if (!game) return res.status(404).json({ message: "Game not Found" });
 
+    // Filter out player who left
     game.players = game.players.filter(
       (player) => player.toString() !== playerId
     );
 
+    // If fewer than 2 players remain, revert status
     if (game.players.length < 2) {
       game.status = "waiting";
     }
@@ -162,6 +209,10 @@ export const leaveGame = async (req, res) => {
   }
 };
 
+/**
+ * @desc Delete a game permanently
+ * @route DELETE /api/games/:id
+ */
 export const deleteGame = async (req, res) => {
   try {
     const deletedGame = await Game.findByIdAndDelete(req.params.id);
