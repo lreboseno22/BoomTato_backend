@@ -75,5 +75,8 @@ setIO(io);
 // Initialize all game-related socket event handlers
 initGameSocket(io);
 
+// check
+console.log("Environment PORT:", process.env.PORT);
+
 // Server Startup
 server.listen(PORT, () => console.log(`Server running on port: ${PORT}`));
