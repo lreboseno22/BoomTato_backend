@@ -31,6 +31,7 @@ connectDB();
 
 // REST API Routes
 
+// test route for deployment
 app.get("/test", (req, res) => {
   console.log("[TEST ROUTE] Hit /test endpoint");
   res.json({ status: "ok" });
