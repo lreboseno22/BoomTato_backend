@@ -23,6 +23,11 @@ export default function initGameSocket(io) {
   const connectedPlayers = new Map();
 
   io.on("connection", (socket) => {
+    console.log("✅ New client connected:", socket.id);
+    socket.on("disconnect", () => console.log("❌ Client disconnected:", socket.id));
+  });
+
+  io.on("connection", (socket) => {
     console.log(`[SERVER] Player connected: ${socket.id}`);
 
     // Player Registration
