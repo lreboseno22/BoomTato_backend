@@ -31,6 +31,11 @@ connectDB();
 
 // REST API Routes
 
+app.get("/test", (req, res) => {
+  console.log("[TEST ROUTE] Hit /test endpoint");
+  res.json({ status: "ok" });
+});
+
 // Player-related routes
 app.use("/api/players", playerRoutes);
 
