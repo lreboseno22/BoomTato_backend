@@ -66,7 +66,8 @@ const io = new Server(server, {
     cors: {
         origin: process.env.CLIENT_URL || "http://localhost:5173",
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    }
+    },
+    transports: ["websocket", "polling"],
 });
 
 // Make the Socket.IO instance globally accessible via the state manager
