@@ -19,7 +19,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware Setup
-app.use(cors()); // Enable CORS to allow requests from frontend
+app.use(cors({
+    origin: "https://boom-tato-frontend.vercel.app",
+    methods: ["GET","POST","PUT","PATCH","DELETE"]
+})); // Enable CORS to allow requests from frontend
 app.use(express.json()); // Parse incoming JSON payloads
 app.use(logger); // Custom request logger middleware for debugging
 
