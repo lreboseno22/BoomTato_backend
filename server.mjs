@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware Setup
 app.use(cors({
-    origin: "https://boom-tato-frontend.vercel.app",
+    origin: process.env.CLIENT_URL,
     methods: ["GET","POST","PUT","PATCH","DELETE"]
 })); // Enable CORS to allow requests from frontend
 app.use(express.json()); // Parse incoming JSON payloads
