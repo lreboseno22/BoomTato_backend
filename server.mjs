@@ -55,7 +55,7 @@ const server = http.createServer(app); // creates an HTTP server to integrate So
 // Initialize Socket.IO instance
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173", // Frontend origin
+        origin: process.env.CLIENT_URL || "http://localhost:5173",
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     }
 });
