@@ -1,20 +1,30 @@
 # BOOMTATO 
 
-**BOOMTATO** is a **2-player full-stack multiplayer game** built with **React**, **Express**, **MongoDB**, and **Kaboom.js**, using **Socket.IO** for real-time gameplay communication.  
+**BOOMTATO** is a **2-player full-stack multiplayer game** built with **React**, **Express**, **MongoDB**, and **Kaboom.js**, using **Socket.IO** for fast, bi-directional communication between players.  
 
-Players can register, log in, create or join games, and compete to **pass the explosive potato** before it blows up!
+Players can register, log in, create or join game rooms, and compete to **pass the explosive potato** before it blows up!
+
+## Screenshots
+<!-- ![Gameplay Screenshot](./public/gameplay.gif) -->
+
+---
+
+## Live Demo
+
+- Frontend: 
+- Backend API: 
 
 ---
 
 ## Features
-- **Real-Time Multiplayer:** Built with **Socket.IO to sync player actions across clients.
+- **Real-Time Multiplayer:** Built with **Socket.IO to synhronize player actions across all connected clients.
 - **Game Lobby System:**
-    - Players can **create** **join** and **leave** game rooms.
-    - The game starts once two players are connected.
+    - Players can **create** **join** and **leave** lobbies.
+    - The host can start the game once two players are connected.
 - **Kaboom.js Gameplay:**
-    - The **Kaboom Canvas renders the interactive game enviornment.
-    - Objective: **Pass the potato** before the timer runs out!
-- **MongoDB Persistence:** Stores users, games, and their states.
+    - Interactive 2D enviornment rendered via Kaboom.js. 
+    - Objective: **Pass the potato** before it explodes!
+- **MongoDB Persistence:** Stores user data, games states, and room info across sessions.
 
 ---
 
@@ -22,10 +32,11 @@ Players can register, log in, create or join games, and compete to **pass the ex
 
 | Layer | Technology |
 |-------|-------------|
-| Frontend | React, Kaboom.js |
+| Frontend | React, Kaboom.js, Axios |
 | Backend | Express.js, Node.js |
-| Database | MongoDB |
+| Database | MongoDB (Mongoose) |
 | Realtime | Socket.IO |
+| Deployment | Render (Backend), Vercel (Frontend) |
 
 ---
 
@@ -61,12 +72,18 @@ Players can register, log in, create or join games, and compete to **pass the ex
 
 ---
 
-## Getting Started
+## Getting Started (Local Setup)
 
 ### 1. Clone the Repository
 
 ```bash
+# Backend
 git clone https://github.com/lreboseno22/BoomTato_backend
+cd BoomTato_backend
+
+# Frontend
+git clone https://github.com/lreboseno22/BoomTato_frontend
+cd BoomTato_frontend
 ```
 
 ### 2. Install Dependencies
@@ -75,11 +92,32 @@ git clone https://github.com/lreboseno22/BoomTato_backend
 npm install
 ```
 
-## BOOMTato Frontend
+### 3. Set up enviornment variables
+Create a .env file in the backend root:
+```bash
+PORT=3000
+MONGO_URI=your_mongodb_connection_string
+CORS_ORIGIN=https://your-frontend-url.com
+```
 
-Here: https://github.com/lreboseno22/BoomTato_frontend 
+### 4. Run the app locally
+```bash
+npm run dev
+```
 
-## FUTURE FEATURES
-Implement password hashing (bcrypt) for secure authentication
-Add JWT token generation for session-based login
-Validate incoming request bodies with a schema validator (e.g., Joi or Zod)
+## BOOMTato Frontend Here!!
+Repo: https://github.com/lreboseno22/BoomTato_frontend 
+
+## Future Improvments
+- Implement bcrypt for secure password hasing
+- Add JWT authentication for persistent sessions
+- Add input validation with Joi or Zod
+- Polish UI/UX and add animations
+
+## Developer Notes
+- Built as a portfolio project to showcase real-time multiplayer functionality with modern web tech.
+- All gameplay logic, WebSocket handling, and API routes were implemented from scratch.
+- Designed with scalability and modualrity in mind for future expansion (score tracking, matchmaking).
+
+## License
+This project is open source
